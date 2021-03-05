@@ -230,18 +230,20 @@ open class MaskedTextFieldDelegate: NSObject, UITextFieldDelegate {
         shouldChangeCharactersIn range: NSRange,
         replacementString string: String
     ) -> Bool {
-        let updatedText: String = replaceCharacters(inText: textField.text ?? "", range: range, withCharacters: string)
+        var updatedText: String = replaceCharacters(inText: textField.text ?? "", range: range, withCharacters: string)
         // https://stackoverflow.com/questions/52131894/shouldchangecharactersin-combined-with-suggested-text
         if (allowSuggestions && string == " " && updatedText == " ") {
             return true
         }
+        updatedText = string.westernArabicNumeralsOnly
+        updatedText = String(updatedText.suffix(10))
         let isDeletion = 0 < range.length && 0 == string.count
         let useAutocomplete = isDeletion ? false : autocomplete
         let useAutoskip = isDeletion ? autoskip : false
         let caretGravity: CaretString.CaretGravity =
             isDeletion ? .backward(autoskip: useAutoskip) : .forward(autocomplete: useAutocomplete)
         
-        let caretPositionInt: Int = isDeletion ? range.location : range.location + string.count
+        let caretPositionInt: Int = isDeletion ? range.location : range.location + updatedText.count
         let caretPosition: String.Index = updatedText.startIndex(offsetBy: caretPositionInt)
         let text = CaretString(string: updatedText, caretPosition: caretPosition, caretGravity: caretGravity)
         
@@ -360,4 +362,12 @@ open class MaskedTextFieldDelegate: NSObject, UITextFieldDelegate {
         }
     }
     
+}
+
+extension String {
+    var westernArabicNumeralsOnly: String {
+        let pattern = UnicodeScalar("0")..."9"
+        return String(unicodeScalars
+            .flatMap { pattern ~= $0 ? Character($0) : nil })
+    }
 }
