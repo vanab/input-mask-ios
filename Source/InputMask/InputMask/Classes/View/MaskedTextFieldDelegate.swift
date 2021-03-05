@@ -230,6 +230,11 @@ open class MaskedTextFieldDelegate: NSObject, UITextFieldDelegate {
         shouldChangeCharactersIn range: NSRange,
         replacementString string: String
     ) -> Bool {
+        var string = string
+        if string != " " {
+            string = string.westernArabicNumeralsOnly
+            string = String(string.suffix(10))
+        }
         let updatedText: String = replaceCharacters(inText: textField.text ?? "", range: range, withCharacters: string)
         // https://stackoverflow.com/questions/52131894/shouldchangecharactersin-combined-with-suggested-text
         if (allowSuggestions && string == " " && updatedText == " ") {
@@ -360,4 +365,12 @@ open class MaskedTextFieldDelegate: NSObject, UITextFieldDelegate {
         }
     }
     
+}
+
+extension String {
+    var westernArabicNumeralsOnly: String {
+        let pattern = UnicodeScalar("0")..."9"
+        return String(unicodeScalars
+            .flatMap { pattern ~= $0 ? Character($0) : nil })
+    }
 }
